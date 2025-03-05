@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 60 minutes * 24 hours * 8 days = 8 days
+    FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
 
 	# CORS settings
@@ -71,6 +72,28 @@ class Settings(BaseSettings):
         )
     
     # Email & Superuser Settings
+    SMTP_TLS: bool = os.getenv("SMTP_TLS")
+    SMTP_SSL: bool = os.getenv("SMTP_SSL")
+    SMTP_PORT: int = os.getenv("SMTP_PORT")
+    SMTP_HOST: str | None = os.getenv("SMTP_HOST")
+    SMTP_USER: str | None = os.getenv("SMTP_USER")
+    SMTP_PASSWORD: str | None = str(os.getenv("SMTP_PASSWORD"))
+    EMAILS_FROM_EMAIL: EmailStr | None = os.getenv("EMAILS_FROM_EMAIL")
+    EMAILS_FROM_NAME: EmailStr | None = None
+
+    @model_validator(mode="after")
+    def _set_default_emails_from(self) -> Self:
+        if not self.EMAILS_FROM_NAME:
+            self.EMAILS_FROM_NAME = self.PROJECT_NAME
+        return self
+
+    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def emails_enabled(self) -> bool:
+        return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
+    
     EMAIL_TEST_USER: EmailStr = "test@example.com"
     FIRST_SUPERUSER: EmailStr = os.getenv("FIRST_SUPERUSER")
     FIRST_SUPERUSER_PASSWORD: str = os.getenv("FIRST_SUPERUSER_PASSWORD")
