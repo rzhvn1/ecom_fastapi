@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.crud import user as user_crud
 from app.models.user import UserPublic, UserRegister, Token
 from app.dependencies.db import SessionDep
+from app.dependencies.user import CurrentUser
 from app.core.config import settings
 from app.core.security import create_access_token
 
@@ -48,3 +49,8 @@ async def login(
 	return Token(
 		access_token=create_access_token(user.id, expires_delta=access_token_expires)
 	)
+
+
+@router.post("/login/test-token", response_model=UserPublic)
+async def test_token(current_user: CurrentUser) -> Any:
+	return current_user
