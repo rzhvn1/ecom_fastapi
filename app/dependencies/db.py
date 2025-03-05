@@ -3,7 +3,7 @@ from collections.abc import Generator
 
 from fastapi import Depends
 from sqlmodel import Session
-from core.db import engine
+from app.core.db import engine
 
 def get_db() -> Generator[Session, None, None]:
     with Session(engine) as session:

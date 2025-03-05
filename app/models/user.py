@@ -18,3 +18,13 @@ class UserCreate(UserBase):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
+
+
+class UserPublic(UserBase):
+    id: uuid.UUID
+
+
+class UserRegister(SQLModel):
+    email: EmailStr = Field(max_length=255)
+    password: str = Field(min_length=8, max_length=40)
+    full_name: str | None = Field(default=None, max_length=255)

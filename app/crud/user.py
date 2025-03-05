@@ -3,8 +3,8 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from models.user import User, UserCreate
-from core.security import get_password_hash, verify_password
+from app.models.user import User, UserCreate
+from app.core.security import get_password_hash, verify_password
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -15,3 +15,9 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     session.commit()
     session.refresh(db_user)
     return db_user
+
+
+def get_user_by_email(*, session: Session, email: str) -> User | None:
+    statement = select(User).where(User.email == email)
+    session_user = session.exec(statement=statement).first()
+    return session_user
