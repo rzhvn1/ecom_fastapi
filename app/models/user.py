@@ -24,6 +24,11 @@ class UserPublic(UserBase):
     id: uuid.UUID
 
 
+class UsersPublic(SQLModel):
+    data: list[UserPublic]
+    count: int
+
+
 class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=40)
