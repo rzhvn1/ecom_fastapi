@@ -5,13 +5,18 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.crud import user as user_crud
-from app.models.user import UserPublic, UserRegister, Token
+from app.models.user import UserPublic, UserRegister, Token, NewPassword
 from app.models.message import Message
 from app.dependencies.db import SessionDep
 from app.dependencies.user import CurrentUser
 from app.core.config import settings
 from app.core.security import create_access_token
-from app.utils.email import generate_password_reset_token, generate_reset_password_email, send_email
+from app.utils.email import (
+	send_email,
+	verify_password_reset_token,
+	generate_password_reset_token, 
+	generate_reset_password_email, 
+)
 
 
 router = APIRouter(tags=["auth"])
@@ -61,7 +66,7 @@ async def test_token(current_user: CurrentUser) -> Any:
 
 
 @router.post("/password-recovery/{email}")
-def recover_password(email: str, session: SessionDep) -> Message:
+async def recover_password(email: str, session: SessionDep) -> Message:
     user = user_crud.get_user_by_email(session=session, email=email)
 
     if not user:
@@ -79,3 +84,26 @@ def recover_password(email: str, session: SessionDep) -> Message:
         html_content=email_data.html_content,
     )
     return Message(message="Password recovery email sent")
+
+
+@router.post("/password-reset")
+async def reset_password(session: SessionDep, body: NewPassword) -> Message:
+	email = verify_password_reset_token(body.token)
+	if not email:
+		raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token")
+	user = user_crud.get_user_by_email(session=session, email=email)
+	if not user:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="The user with this email does not exist in the system."
+		)
+	elif not user.is_active:
+		raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+	
+	hashed_password = user_crud.get_password_hash(password=body.new_password)
+	user.hashed_password = hashed_password
+	session.add(user)
+	session.commit()
+
+	return Message(message="Password updated successfully")
+	

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 from datetime import timedelta, datetime, timezone
 from jinja2 import Template
+from jwt.exceptions import InvalidTokenError
 
 from app.core.config import settings
 from app.core.security import ALGORITHM
@@ -38,7 +39,7 @@ def send_email(
 ) -> None:
     assert settings.emails_enabled, "no provided configuration for email variables"
     message = emails.Message(
-        subject=subject,
+        subject=subject,  
         html=html_content,
         mail_from=(settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL),
     )
@@ -82,3 +83,13 @@ def generate_reset_password_email(email_to: str, email: str, token: str) -> Emai
         },
     )
     return EmailData(html_content=html_content, subject=subject)
+
+
+def verify_password_reset_token(token: str) -> str | None:
+    try:
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[ALGORITHM]
+        )
+        return str(decoded_token["sub"])
+    except InvalidTokenError:
+        return None
