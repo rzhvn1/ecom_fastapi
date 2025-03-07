@@ -6,7 +6,7 @@ from sqlmodel import select, func
 
 from app.models.user import User, UserPublic, UsersPublic, UserCreate, UserUpdate
 from app.models.message import Message
-from app.models.shop import ShopCategoryPublic, ShopCategoryCreateUpdate
+from app.models.shop import ShopCategory, ShopCategoryPublic, ShopCategoriesPublic, ShopCategoryCreateUpdate
 from app.crud import user as user_crud
 from app.crud import shop as shop_crud
 from app.core.config import settings
@@ -16,6 +16,7 @@ from app.utils.email import generate_new_account_email, send_email
 
 router = APIRouter(tags=["admin"])
 
+# users routes
 @router.get("/users", dependencies=CurrentSuperUser, response_model=UsersPublic)
 async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
 	count_statement = select(func.count()).select_from(User)
@@ -88,6 +89,18 @@ async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id
 	session.commit()
 
 	return Message(message="User deleted successfully")
+
+
+# shop category routes
+@router.get("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoriesPublic)
+async def read_shop_categories(*, session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
+	count_statement = select(func.count()).select_from(ShopCategory)
+	count = session.exec(statement=count_statement).one()
+
+	statement = select(ShopCategory).offset(skip).limit(limit)
+	shop_categories = session.exec(statement=statement)
+
+	return ShopCategoriesPublic(data=shop_categories, count=count)
 
 
 @router.post("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)

@@ -15,5 +15,10 @@ class ShopCategoryPublic(ShopCategoryBase):
     id: uuid.UUID
 
 
+class ShopCategoriesPublic(SQLModel):
+    data: list[ShopCategoryPublic]
+    count: int
+
+
 class ShopCategoryCreateUpdate(SQLModel):
     name: str = Field(max_length=255)
