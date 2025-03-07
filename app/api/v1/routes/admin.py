@@ -1,9 +1,10 @@
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, func
 
-from app.models.user import User, UserPublic, UsersPublic, UserCreate
+from app.models.user import User, UserPublic, UsersPublic, UserCreate, UserUpdate
 from app.crud import user as user_crud
 from app.core.config import settings
 from app.dependencies.db import SessionDep
@@ -43,6 +44,27 @@ async def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic
 		)
 
 	return user
+
+
+@router.patch("/users/{user_id}", dependencies=CurrentSuperUser, response_model=UserPublic)
+async def update_user(*, session: SessionDep, user_id: uuid.UUID, user_in: UserUpdate) -> Any:
+	db_user = session.get(User, user_id)
+	if not db_user:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="The user with this id does not exist in the system"
+		)
+	if user_in.email:
+		existing_user = user_crud.get_user_by_email(session=session, email=user_in.email)
+		if existing_user and existing_user.id != user_id:
+			raise HTTPException(
+			status_code=status.HTTP_409_CONFLICT,
+			detail="User with this email already exists"
+		)
+
+	db_user = user_crud.update_user(session=session, db_user=db_user, user_in=user_in)
+
+	return db_user
 	
 
 
