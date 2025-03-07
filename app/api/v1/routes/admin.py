@@ -5,10 +5,11 @@ from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, func
 
 from app.models.user import User, UserPublic, UsersPublic, UserCreate, UserUpdate
+from app.models.message import Message
 from app.crud import user as user_crud
 from app.core.config import settings
 from app.dependencies.db import SessionDep
-from app.dependencies.user import CurrentSuperUser
+from app.dependencies.user import CurrentSuperUser, CurrentUser
 from app.utils.email import generate_new_account_email, send_email
 
 router = APIRouter(tags=["admin"])
@@ -65,6 +66,27 @@ async def update_user(*, session: SessionDep, user_id: uuid.UUID, user_in: UserU
 	db_user = user_crud.update_user(session=session, db_user=db_user, user_in=user_in)
 
 	return db_user
+
+
+@router.delete("/users/{user_id}", dependencies=CurrentSuperUser)
+async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID) -> Message:
+	user = session.get(User, user_id)
+	if not user:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="The user with this id does not exist in the system"
+		)
+	if current_user == user:
+		raise HTTPException(
+			status_code=status.HTTP_403_FORBIDDEN,
+			detail="The user with this id does not exist in the system"
+		)
+	
+	session.delete(user)
+	session.commit()
+
+	return Message(message="User deleted successfully")
+	
 	
 
 
