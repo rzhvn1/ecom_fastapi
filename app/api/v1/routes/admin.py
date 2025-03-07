@@ -104,10 +104,26 @@ async def read_shop_categories(*, session: SessionDep, skip: int = 0, limit: int
 
 
 @router.post("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
-async def create_shop_category(*, session: SessionDep, shop_caregory_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
-	shop_category = shop_crud.create_shop_category(session=session, shop_category_create=shop_caregory_in)
+async def create_shop_category(*, session: SessionDep, category_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
+	category = shop_crud.create_shop_category(session=session, category_create=category_in)
 
-	return shop_category
+	return category
+
+
+@router.patch("/shop-categories/{category_id}", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
+async def update_shop_category(*, session: SessionDep, category_id: uuid.UUID, caregory_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
+	db_category = session.get(ShopCategory, category_id)
+	if not db_category:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="Shop Category not found"
+		)
+	
+	db_category = shop_crud.update_shop_category(session=session, db_category=db_category, category_update=caregory_in)
+
+	return db_category
+	
+	
 	
 	
 
