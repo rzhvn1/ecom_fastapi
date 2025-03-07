@@ -79,7 +79,7 @@ async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id
 	if current_user == user:
 		raise HTTPException(
 			status_code=status.HTTP_403_FORBIDDEN,
-			detail="The user with this id does not exist in the system"
+			detail="Super users are not allowed to delete themselves"
 		)
 	
 	session.delete(user)
