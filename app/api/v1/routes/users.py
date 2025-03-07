@@ -4,7 +4,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from app.dependencies.db import SessionDep
 from app.dependencies.user import CurrentUser
-from app.models.user import User, UserPublic, UserUpdateMe
+from app.models.user import User, UserPublic, UserUpdateMe, UpdatePassword
+from app.models.message import Message
+from app.core.security import verify_password, get_password_hash
 from app.crud import user as user_crud
 
 router = APIRouter(tags=["users"])
@@ -50,3 +52,23 @@ async def update_user_me(session: SessionDep, current_user: CurrentUser, user_in
     session.refresh(current_user)
 
     return current_user
+
+
+@router.patch("/me/password", response_model=Message)
+async def update_password_me(session: SessionDep, current_user: CurrentUser, body: UpdatePassword) -> Any:
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect password"
+        )
+    if body.current_password == body.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password cannot be the same as the current one"
+        )
+    hashed_password = get_password_hash(body.new_password)
+    current_user.hashed_password = hashed_password
+    session.add(current_user)
+    session.commit()
+
+    return Message(message="Password updated successfully")

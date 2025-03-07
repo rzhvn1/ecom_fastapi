@@ -24,6 +24,11 @@ class UserUpdateMe(SQLModel):
     email: EmailStr | None = Field(default=None, max_length=255)
 
 
+class UpdatePassword(SQLModel):
+    current_password: str = Field(min_length=8, max_length=40)
+    new_password: str = Field(min_length=8, max_length=40)
+
+
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
