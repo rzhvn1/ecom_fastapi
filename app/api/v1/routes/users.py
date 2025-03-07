@@ -16,26 +16,6 @@ async def read_user_me(current_user: CurrentUser) -> Any:
     return current_user
 
 
-@router.get("/{user_id}", response_model=UserPublic)
-async def read_user_by_id(session: SessionDep, user_id: uuid.UUID, current_user: CurrentUser) -> Any:
-    user = session.get(User, user_id)
-    if not user: 
-        raise HTTPException(
-			status_code=status.HTTP_404_NOT_FOUND,
-			detail="The user with this id does not exist in the system"
-		)
-    if user == current_user:
-        return user
-    
-    if not current_user.is_superuser:
-          raise HTTPException(
-			status_code=status.HTTP_403_FORBIDDEN,
-			detail="The user doesn't have enough privileges"
-		)
-    
-    return user
-
-
 @router.patch("/me", response_model=UserPublic)
 async def update_user_me(session: SessionDep, current_user: CurrentUser, user_in: UserUpdateMe) -> Any:
     if user_in.email:
@@ -72,3 +52,36 @@ async def update_password_me(session: SessionDep, current_user: CurrentUser, bod
     session.commit()
 
     return Message(message="Password updated successfully")
+
+
+@router.delete("/me", response_model=Message)
+async def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
+    if current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Super users are not allowed to delete themselves"
+        )
+    session.delete(current_user)
+    session.commit()
+    
+    return Message(message="User deleted successfully")
+
+
+@router.get("/{user_id}", response_model=UserPublic)
+async def read_user_by_id(session: SessionDep, user_id: uuid.UUID, current_user: CurrentUser) -> Any:
+    user = session.get(User, user_id)
+    if not user: 
+        raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="The user with this id does not exist in the system"
+		)
+    if user == current_user:
+        return user
+    
+    if not current_user.is_superuser:
+          raise HTTPException(
+			status_code=status.HTTP_403_FORBIDDEN,
+			detail="The user doesn't have enough privileges"
+		)
+    
+    return user
