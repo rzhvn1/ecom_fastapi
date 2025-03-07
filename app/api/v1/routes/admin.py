@@ -6,7 +6,9 @@ from sqlmodel import select, func
 
 from app.models.user import User, UserPublic, UsersPublic, UserCreate, UserUpdate
 from app.models.message import Message
+from app.models.shop import ShopCategoryPublic, ShopCategoryCreateUpdate
 from app.crud import user as user_crud
+from app.crud import shop as shop_crud
 from app.core.config import settings
 from app.dependencies.db import SessionDep
 from app.dependencies.user import CurrentSuperUser, CurrentUser
@@ -86,6 +88,13 @@ async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id
 	session.commit()
 
 	return Message(message="User deleted successfully")
+
+
+@router.post("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
+async def create_shop_category(*, session: SessionDep, shop_caregory_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
+	shop_category = shop_crud.create_shop_category(session=session, shop_category_create=shop_caregory_in)
+
+	return shop_category
 	
 	
 
