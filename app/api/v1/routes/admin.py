@@ -19,13 +19,9 @@ router = APIRouter(tags=["admin"])
 # users routes
 @router.get("/users", dependencies=CurrentSuperUser, response_model=UsersPublic)
 async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-	count_statement = select(func.count()).select_from(User)
-	count = session.exec(statement=count_statement).one()
+	users = user_crud.get_users(session=session, skip=skip, limit=limit)
 
-	statement = select(User).offset(skip).limit(limit)
-	users = session.exec(statement=statement)
-
-	return UsersPublic(data=users, count=count)
+	return users
 
 
 @router.post("/users", dependencies=CurrentSuperUser, response_model=UserPublic)

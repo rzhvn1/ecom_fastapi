@@ -1,9 +1,9 @@
 import uuid
 from typing import Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
-from app.models.user import User, UserCreate, UserUpdate
+from app.models.user import User, UserCreate, UserUpdate, UsersPublic
 from app.core.security import get_password_hash, verify_password
 
 
@@ -14,6 +14,15 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
+
+def get_users(*, session: Session, skip: int, limit: int) -> UsersPublic:
+    count_statement = select(func.count()).select_from(User) 
+    count = session.exec(statement=count_statement).one()
+
+    statement = select(User).offset(skip).limit(limit)
+    users = session.exec(statement=statement)
+
+    return UsersPublic(data=users, count=count)
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
