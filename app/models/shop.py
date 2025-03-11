@@ -21,7 +21,7 @@ class Shop(ShopBase, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False)
     category_id: uuid.UUID = Field(foreign_key="shopcategory.id", nullable=False)
 
-    owner: "User" = Relationship(back_populates="shops")  # ✅ Owner (User) relationship
+    owner: "User" = Relationship(back_populates="shops")  # type: ignore # ✅ Owner (User) relationship
     category: "ShopCategory" = Relationship(back_populates="shops")
 
 
