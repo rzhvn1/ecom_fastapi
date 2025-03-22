@@ -4,11 +4,13 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, func
 
+from app.models.product import ProductCategoryCreateUpdate, ProductCategoryPublic
 from app.models.user import UserPublic, UsersPublic, UserCreate, UserUpdate
 from app.models.message import Message
 from app.models.shop import ShopCategoryPublic, ShopCategoryCreateUpdate
 from app.crud import user as user_crud
 from app.crud import shop as shop_crud
+from app.crud import product as product_crud
 from app.core.config import settings
 from app.dependencies.db import SessionDep
 from app.dependencies.user import CurrentSuperUser, CurrentUser
@@ -120,3 +122,11 @@ async def delete_shop_category(*, session: SessionDep, category_id: uuid.UUID) -
 	session.commit()
 
 	return Message(message="Shop Category deleted successfully")
+
+
+# product category routes
+@router.post("/product-category", dependencies=CurrentSuperUser, response_model=ProductCategoryPublic)
+async def create_product_category(session: SessionDep, category_in: ProductCategoryCreateUpdate) -> ProductCategoryPublic:
+	category = product_crud.create_product_category(session=session, category_create=category_in)
+
+	return category
