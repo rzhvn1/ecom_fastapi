@@ -22,6 +22,7 @@ class Shop(ShopBase, table=True):
 
     owner: "User" = Relationship(back_populates="shops")  # type: ignore # ✅ Owner (User) relationship
     category: "ShopCategory" = Relationship(back_populates="shops")
+    products: list["Product"] = Relationship(back_populates="shop") # type: ignore
 
 
 class ShopCreate(SQLModel):
