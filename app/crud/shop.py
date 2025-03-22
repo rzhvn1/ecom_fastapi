@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select, func
 
 from app.dependencies.user import CurrentUser
-from app.models.shop import Shop, ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate, ShopCreate, ShopPublic, ShopsPublic
+from app.models.shop import Shop, ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate, ShopCreate, ShopPublic, ShopUpdate, ShopsPublic
 
 
 def get_shop_categories(*, session: Session, skip: int, limit: int) -> ShopCategoriesPublic:
@@ -63,3 +63,12 @@ def create_shop(*, session: Session, current_user: CurrentUser, shop_create: Sho
     session.commit()
     session.refresh(db_shop)
     return db_shop
+
+
+def update_shop(*, session: Session, shop: Shop, shop_in: ShopUpdate) -> Shop:
+    update_dict = shop_in.model_dump(exclude_unset=True)
+    shop.sqlmodel_update(update_dict)
+    session.add(shop)
+    session.commit()
+    session.refresh(shop)
+    return shop

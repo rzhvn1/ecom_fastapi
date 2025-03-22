@@ -1,10 +1,9 @@
 import uuid
 
-from datetime import datetime, timezone, time
+from datetime import time
 
 from .base import Base
 from sqlmodel import SQLModel, Field, Relationship
-from pydantic import HttpUrl
 
 
 class ShopBase(Base):
@@ -33,6 +32,16 @@ class ShopCreate(SQLModel):
     address: str = Field(max_length=500, nullable=False)
     image: str | None = Field(default=None, max_length=2083)
     category_id: uuid.UUID
+
+
+class ShopUpdate(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    opens_at: time | None = None
+    closes_at: time | None = None
+    address: str | None = Field(default=None, max_length=500)
+    image: str | None = Field(default=None, max_length=2083)
+    category_id: uuid.UUID | None = None
 
 
 class ShopPublic(ShopBase):
