@@ -41,6 +41,11 @@ class ShopPublic(ShopBase):
     category_id: uuid.UUID
 
 
+class ShopsPublic(SQLModel):
+    data: list[ShopPublic]
+    count: int
+
+
 class ShopCategoryBase(Base):
     name: str = Field(max_length=255)
 

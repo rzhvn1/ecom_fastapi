@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select, func
 
 from app.dependencies.user import CurrentUser
-from app.models.shop import Shop, ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate, ShopCreate
+from app.models.shop import Shop, ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate, ShopCreate, ShopPublic, ShopsPublic
 
 
 def get_shop_categories(*, session: Session, skip: int, limit: int) -> ShopCategoriesPublic:
@@ -40,6 +40,16 @@ def update_shop_category(*, session: Session, db_category: ShopCategory, categor
     session.refresh(db_category)
 
     return db_category
+
+
+def get_shops(*, session: Session, skip: int, limit: int) -> ShopsPublic:
+    count_statement = select(func.count()).select_from(Shop)
+    count = session.exec(statement=count_statement).one()
+
+    statement = select(Shop).offset(skip).limit(limit)
+    shops = session.exec(statement=statement)
+
+    return ShopsPublic(data=shops, count=count)
 
 
 def create_shop(*, session: Session, current_user: CurrentUser, shop_create: ShopCreate) -> Shop:
