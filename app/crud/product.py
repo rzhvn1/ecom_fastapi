@@ -4,7 +4,17 @@ from typing import Any
 from sqlmodel import Session, select, func
 
 from app.dependencies.user import CurrentUser
-from app.models.product import ProductCategory, ProductCategoryCreateUpdate
+from app.models.product import ProductCategoriesPublic, ProductCategory, ProductCategoryCreateUpdate
+
+
+def get_product_categories(*, session: Session, skip: int, limit: int) -> ProductCategoriesPublic:
+    count_statement = select(func.count()).select_from(ProductCategory)
+    count = session.exec(statement=count_statement).one()
+
+    statement = select(ProductCategory).offset(skip).limit(limit)
+    product_categories = session.exec(statement=statement)
+
+    return ProductCategoriesPublic(data=product_categories, count=count)
 
 
 def get_category_by_id(*, session: Session, id: uuid.UUID) -> ProductCategory | None:
