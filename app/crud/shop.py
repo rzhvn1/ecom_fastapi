@@ -52,6 +52,11 @@ def get_shops(*, session: Session, skip: int, limit: int) -> ShopsPublic:
     return ShopsPublic(data=shops, count=count)
 
 
+def get_shop_by_id(*, session: Session, id: uuid.UUID) -> Shop | None:
+    statement = select(Shop).where(Shop.id == id)
+    session_shop = session.exec(statement=statement).first()
+    return session_shop
+
 def create_shop(*, session: Session, current_user: CurrentUser, shop_create: ShopCreate) -> Shop:
     db_shop = Shop.model_validate(shop_create, update={"user_id": current_user.id})
     session.add(db_shop)

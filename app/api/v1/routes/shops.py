@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, HTTPException, status
 from typing import Any
 
@@ -19,6 +20,18 @@ async def read_shop_categories(session: SessionDep, skip: int = 0, limit: int = 
 @router.get("/", response_model=ShopsPublic)
 async def read_shops(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
      return shop_crud.get_shops(session=session, skip=skip, limit=limit)
+
+
+@router.get("/{shop_id}", response_model=ShopPublic)
+async def read_shop(session: SessionDep, shop_id: uuid.UUID) -> Any:
+     shop = shop_crud.get_shop_by_id(session=session, id=shop_id)
+     if not shop:
+        raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="Shop not found"
+		)
+     
+     return shop
 
 
 @router.post("/", response_model=ShopPublic)
