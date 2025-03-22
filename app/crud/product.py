@@ -7,8 +7,24 @@ from app.dependencies.user import CurrentUser
 from app.models.product import ProductCategory, ProductCategoryCreateUpdate
 
 
+def get_category_by_id(*, session: Session, id: uuid.UUID) -> ProductCategory | None:
+    statement = select(ProductCategory).where(ProductCategory.id == id)
+    session_category = session.exec(statement=statement).first()
+    return session_category
+
+
 def create_product_category(*, session: Session, category_create: ProductCategoryCreateUpdate) -> ProductCategory:
     db_category = ProductCategory.model_validate(category_create)
+    session.add(db_category)
+    session.commit()
+    session.refresh(db_category)
+
+    return db_category
+
+
+def update_product_category(*, session: Session, db_category: ProductCategory, category_update: ProductCategoryCreateUpdate) -> ProductCategory:
+    category_data = category_update.model_dump(exclude_unset=True)
+    db_category.sqlmodel_update(category_data)
     session.add(db_category)
     session.commit()
     session.refresh(db_category)
