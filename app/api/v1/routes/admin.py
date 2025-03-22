@@ -144,3 +144,18 @@ async def update_product_category(session: SessionDep, category_id: uuid.UUID, c
 	db_category = product_crud.update_product_category(session=session, db_category=db_category, category_update=caregory_in)
 
 	return db_category
+
+
+@router.delete("/product-categories/{category_id}", dependencies=CurrentSuperUser, response_model=Message)
+async def delete_product_category(*, session: SessionDep, category_id: uuid.UUID) -> Message:
+	db_category = product_crud.get_category_by_id(session=session, id=category_id)
+	if not db_category:
+		raise HTTPException(
+			status_code=status.HTTP_404_NOT_FOUND,
+			detail="Product Category not found"
+		)
+	
+	session.delete(db_category)
+	session.commit()
+
+	return Message(message="Product Category deleted successfully")
