@@ -1,7 +1,10 @@
 import uuid
+from typing import List
 
 from pydantic import EmailStr
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+
+from .shop import Shop
 
 
 class UserBase(SQLModel):
@@ -31,6 +34,7 @@ class UpdatePassword(SQLModel):
 
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    shops: List["Shop"] = Relationship(back_populates="owner") 
     hashed_password: str
 
 

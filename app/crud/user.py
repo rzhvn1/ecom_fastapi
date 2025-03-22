@@ -18,6 +18,15 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
         return None
     return db_user
 
+def get_users(*, session: Session, skip: int, limit: int) -> UsersPublic:
+    count_statement = select(func.count()).select_from(User) 
+    count = session.exec(statement=count_statement).one()
+
+    statement = select(User).offset(skip).limit(limit)
+    users = session.exec(statement=statement)
+
+    return UsersPublic(data=users, count=count)
+
 
 
 def get_users(*, session: Session, skip: int, limit: int) -> UsersPublic:
