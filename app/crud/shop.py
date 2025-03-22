@@ -3,7 +3,8 @@ from typing import Any
 
 from sqlmodel import Session, select, func
 
-from app.models.shop import ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate
+from app.dependencies.user import CurrentUser
+from app.models.shop import Shop, ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate, ShopCreate
 
 
 def get_shop_categories(*, session: Session, skip: int, limit: int) -> ShopCategoriesPublic:
@@ -39,3 +40,11 @@ def update_shop_category(*, session: Session, db_category: ShopCategory, categor
     session.refresh(db_category)
 
     return db_category
+
+
+def create_shop(*, session: Session, current_user: CurrentUser, shop_create: ShopCreate) -> Shop:
+    db_shop = Shop.model_validate(shop_create, update={"user_id": current_user.id})
+    session.add(db_shop)
+    session.commit()
+    session.refresh(db_shop)
+    return db_shop

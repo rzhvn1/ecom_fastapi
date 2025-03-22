@@ -25,6 +25,22 @@ class Shop(ShopBase, table=True):
     category: "ShopCategory" = Relationship(back_populates="shops")
 
 
+class ShopCreate(SQLModel):
+    name: str = Field(max_length=255, nullable=False)
+    description: str | None = None
+    opens_at: time = Field(nullable=False)
+    closes_at: time = Field(nullable=False)
+    address: str = Field(max_length=500, nullable=False)
+    image: str | None = Field(default=None, max_length=2083)
+    category_id: uuid.UUID
+
+
+class ShopPublic(ShopBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    category_id: uuid.UUID
+
+
 class ShopCategoryBase(Base):
     name: str = Field(max_length=255)
 

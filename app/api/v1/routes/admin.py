@@ -4,9 +4,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, func
 
-from app.models.user import User, UserPublic, UsersPublic, UserCreate, UserUpdate
+from app.models.user import UserPublic, UsersPublic, UserCreate, UserUpdate
 from app.models.message import Message
-from app.models.shop import ShopCategory, ShopCategoryPublic, ShopCategoriesPublic, ShopCategoryCreateUpdate
+from app.models.shop import ShopCategoryPublic, ShopCategoryCreateUpdate
 from app.crud import user as user_crud
 from app.crud import shop as shop_crud
 from app.core.config import settings
@@ -23,7 +23,7 @@ async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> An
 
 
 @router.post("/users", dependencies=CurrentSuperUser, response_model=UserPublic)
-async def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic:
+async def create_user(session: SessionDep, user_in: UserCreate) -> UserPublic:
 	user = user_crud.get_user_by_email(session=session, email=user_in.email)
 	if user:
 		raise HTTPException(
@@ -45,7 +45,7 @@ async def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic
 
 
 @router.patch("/users/{user_id}", dependencies=CurrentSuperUser, response_model=UserPublic)
-async def update_user(*, session: SessionDep, user_id: uuid.UUID, user_in: UserUpdate) -> Any:
+async def update_user(session: SessionDep, user_id: uuid.UUID, user_in: UserUpdate) -> Any:
 	db_user = user_crud.get_user_by_id(session=session, id=user_id)
 	if not db_user:
 		raise HTTPException(
@@ -66,7 +66,7 @@ async def update_user(*, session: SessionDep, user_id: uuid.UUID, user_in: UserU
 
 
 @router.delete("/users/{user_id}", dependencies=CurrentSuperUser)
-async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID) -> Message:
+async def delete_user(session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID) -> Message:
 	user = user_crud.get_user_by_id(session=session, id=user_id)
 	if not user:
 		raise HTTPException(
@@ -86,20 +86,15 @@ async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id
 
 
 # shop category routes
-@router.get("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoriesPublic)
-async def read_shop_categories(*, session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-	return shop_crud.get_shop_categories(session=session, skip=skip, limit=limit)
-
-
 @router.post("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
-async def create_shop_category(*, session: SessionDep, category_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
+async def create_shop_category(session: SessionDep, category_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
 	category = shop_crud.create_shop_category(session=session, category_create=category_in)
 
 	return category
 
 
 @router.patch("/shop-categories/{category_id}", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
-async def update_shop_category(*, session: SessionDep, category_id: uuid.UUID, caregory_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
+async def update_shop_category(session: SessionDep, category_id: uuid.UUID, caregory_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
 	db_category = shop_crud.get_category_by_id(session=session, id=category_id)
 	if not db_category:
 		raise HTTPException(
@@ -125,11 +120,3 @@ async def delete_shop_category(*, session: SessionDep, category_id: uuid.UUID) -
 	session.commit()
 
 	return Message(message="Shop Category deleted successfully")
-
-	
-	
-	
-	
-
-
-	
