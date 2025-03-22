@@ -1,9 +1,25 @@
 import uuid
 from typing import Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
-from app.models.shop import ShopCategory, ShopCategoryCreateUpdate
+from app.models.shop import ShopCategoriesPublic, ShopCategory, ShopCategoryCreateUpdate
+
+
+def get_shop_categories(*, session: Session, skip: int, limit: int) -> ShopCategoriesPublic:
+    count_statement = select(func.count()).select_from(ShopCategory)
+    count = session.exec(statement=count_statement).one()
+
+    statement = select(ShopCategory).offset(skip).limit(limit)
+    shop_categories = session.exec(statement=statement)
+
+    return ShopCategoriesPublic(data=shop_categories, count=count)
+
+
+def get_category_by_id(*, session: Session, id: uuid.UUID) -> ShopCategory | None:
+    statement = select(ShopCategory).where(ShopCategory.id == id)
+    session_category = session.exec(statement=statement).first()
+    return session_category
 
 
 def create_shop_category(*, session: Session, category_create: ShopCategoryCreateUpdate) -> ShopCategory:

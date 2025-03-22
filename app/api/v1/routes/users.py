@@ -25,13 +25,8 @@ async def update_user_me(session: SessionDep, current_user: CurrentUser, user_in
                 status_code=status.HTTP_409_CONFLICT, 
                 detail="User with this email already exists"
             )
-    user_data = user_in.model_dump(exclude_unset=True)
-    current_user.sqlmodel_update(user_data)
-    session.add(current_user)
-    session.commit()
-    session.refresh(current_user)
-
-    return current_user
+    
+    return user_crud.update_user_me(session=session, current_user=current_user, user_in=user_in)
 
 
 @router.patch("/me/password", response_model=Message)
@@ -46,10 +41,8 @@ async def update_password_me(session: SessionDep, current_user: CurrentUser, bod
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="New password cannot be the same as the current one"
         )
-    hashed_password = get_password_hash(body.new_password)
-    current_user.hashed_password = hashed_password
-    session.add(current_user)
-    session.commit()
+    
+    user_crud.update_password_me(session=session, current_user=current_user, body=body)
 
     return Message(message="Password updated successfully")
 
@@ -69,7 +62,7 @@ async def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
 
 @router.get("/{user_id}", response_model=UserPublic)
 async def read_user_by_id(session: SessionDep, user_id: uuid.UUID, current_user: CurrentUser) -> Any:
-    user = session.get(User, user_id)
+    user = user_crud.get_user_by_id(session=session, id=user_id)
     if not user: 
         raise HTTPException(
 			status_code=status.HTTP_404_NOT_FOUND,

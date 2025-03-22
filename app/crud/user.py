@@ -1,10 +1,13 @@
 import uuid
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 
-from app.models.user import User, UserCreate, UserUpdate
+from app.models.user import UpdatePassword, User, UserCreate, UserUpdate, UserUpdateMe, UsersPublic
 from app.core.security import get_password_hash, verify_password
+
+if TYPE_CHECKING:
+    from app.dependencies.user import CurrentUser
 
 
 def authenticate(*, session: Session, email: str, password: str) -> User | None:
@@ -14,6 +17,23 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     if not verify_password(password, db_user.hashed_password):
         return None
     return db_user
+
+
+
+def get_users(*, session: Session, skip: int, limit: int) -> UsersPublic:
+    count_statement = select(func.count()).select_from(User)
+    count = session.exec(statement=count_statement).one()
+    
+    statement = select(User).offset(skip).limit(limit)
+    users = session.exec(statement=statement)
+
+    return UsersPublic(data=users, count=count)
+
+
+def get_user_by_id(*, session: Session, id: uuid.UUID) -> User | None:
+    statement = select(User).where(User.id == id)
+    session_user = session.exec(statement=statement).first()
+    return session_user
 
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
@@ -45,3 +65,21 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
     session.refresh(db_user)
 
     return db_user
+
+
+def update_user_me(*, session: Session, current_user: "User", user_in: UserUpdateMe) -> Any:
+    user_data = user_in.model_dump(exclude_unset=True)
+    current_user.sqlmodel_update(user_data)
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+
+    return current_user
+
+
+def update_password_me(*, session:Session, current_user: "User", body: UpdatePassword) -> Any:
+    hashed_password = get_password_hash(body.new_password)
+    current_user.hashed_password = hashed_password
+    session.add(current_user)
+    session.commit()
+    

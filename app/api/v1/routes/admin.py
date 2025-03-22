@@ -19,13 +19,7 @@ router = APIRouter(tags=["admin"])
 # users routes
 @router.get("/users", dependencies=CurrentSuperUser, response_model=UsersPublic)
 async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-	count_statement = select(func.count()).select_from(User)
-	count = session.exec(statement=count_statement).one()
-
-	statement = select(User).offset(skip).limit(limit)
-	users = session.exec(statement=statement)
-
-	return UsersPublic(data=users, count=count)
+	return user_crud.get_users(session=session, skip=skip, limit=limit)
 
 
 @router.post("/users", dependencies=CurrentSuperUser, response_model=UserPublic)
@@ -52,7 +46,7 @@ async def create_user(*, session: SessionDep, user_in: UserCreate) -> UserPublic
 
 @router.patch("/users/{user_id}", dependencies=CurrentSuperUser, response_model=UserPublic)
 async def update_user(*, session: SessionDep, user_id: uuid.UUID, user_in: UserUpdate) -> Any:
-	db_user = session.get(User, user_id)
+	db_user = user_crud.get_user_by_id(session=session, id=user_id)
 	if not db_user:
 		raise HTTPException(
 			status_code=status.HTTP_404_NOT_FOUND,
@@ -73,7 +67,7 @@ async def update_user(*, session: SessionDep, user_id: uuid.UUID, user_in: UserU
 
 @router.delete("/users/{user_id}", dependencies=CurrentSuperUser)
 async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID) -> Message:
-	user = session.get(User, user_id)
+	user = user_crud.get_user_by_id(session=session, id=user_id)
 	if not user:
 		raise HTTPException(
 			status_code=status.HTTP_404_NOT_FOUND,
@@ -94,13 +88,7 @@ async def delete_user(*, session: SessionDep, current_user: CurrentUser, user_id
 # shop category routes
 @router.get("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoriesPublic)
 async def read_shop_categories(*, session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
-	count_statement = select(func.count()).select_from(ShopCategory)
-	count = session.exec(statement=count_statement).one()
-
-	statement = select(ShopCategory).offset(skip).limit(limit)
-	shop_categories = session.exec(statement=statement)
-
-	return ShopCategoriesPublic(data=shop_categories, count=count)
+	return shop_crud.get_shop_categories(session=session, skip=skip, limit=limit)
 
 
 @router.post("/shop-category", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
@@ -112,7 +100,7 @@ async def create_shop_category(*, session: SessionDep, category_in: ShopCategory
 
 @router.patch("/shop-categories/{category_id}", dependencies=CurrentSuperUser, response_model=ShopCategoryPublic)
 async def update_shop_category(*, session: SessionDep, category_id: uuid.UUID, caregory_in: ShopCategoryCreateUpdate) -> ShopCategoryPublic:
-	db_category = session.get(ShopCategory, category_id)
+	db_category = shop_crud.get_category_by_id(session=session, id=category_id)
 	if not db_category:
 		raise HTTPException(
 			status_code=status.HTTP_404_NOT_FOUND,
@@ -126,7 +114,7 @@ async def update_shop_category(*, session: SessionDep, category_id: uuid.UUID, c
 
 @router.delete("/shop-categories/{category_id}", dependencies=CurrentSuperUser, response_model=Message)
 async def delete_shop_category(*, session: SessionDep, category_id: uuid.UUID) -> Message:
-	db_category = session.get(ShopCategory, category_id)
+	db_category = shop_crud.get_category_by_id(session=session, id=category_id)
 	if not db_category:
 		raise HTTPException(
 			status_code=status.HTTP_404_NOT_FOUND,
